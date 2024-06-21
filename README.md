@@ -49,7 +49,7 @@ sudo mount /dev/sda1 /mnt
 Clone the repository
 
 ```sh
-git clone https://github.com/RayXxxxxx/raspberrypi-image-backup.git
+git clone https://github.com/edatec/raspberrypi-image-backup
 ```
 
 Copy image-backup script to the directory where the storage device is mounted
