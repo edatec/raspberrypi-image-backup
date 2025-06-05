@@ -113,6 +113,16 @@ backup()
     sed -i "/^[[:space:]]*#/!s|^\S\+\(\s\+/boot\S*\s\+vfat\s\+.*\)$|PARTUUID=${PTUUID}-01\1|" "${MNTPATH}/etc/fstab"
     sed -i "/^[[:space:]]*#/!s|^\S\+\(\s\+/\s\+.*\)$|PARTUUID=${PTUUID}-02\1|" "${MNTPATH}/etc/fstab"
   fi
+
+  if [ ! -f "${MNTPATH}/etc/rc.local" ];then
+    NEED_RCLOCAL=1
+    cat > "${MNTPATH}/etc/rc.local" << EOF0 
+#!/bin/sh
+
+exit 0
+EOF0
+    chmod +x "${MNTPATH}/etc/rc.local"
+  fi
   if [[ "${OSID}" != "ubuntu" && "${NOEXPAND}" = "FALSE" && "${ROOT_TYPE}" != "f2fs" && $(grep -v '^[[:space:]]*#' "${MNTPATH}/etc/rc.local" | grep -c 'resize-root-fs') -eq 0 ]]; then
     cat <<\EOF1 > "${MNTPATH}/etc/resize-root-fs"
 #!/bin/bash
@@ -160,6 +170,24 @@ chmod +x /etc/init.d/resize_root_fs
 update-rc.d resize_root_fs defaults
 sed -i '/resize-root-fs/d' /etc/rc.local
 rm /etc/resize-root-fs
+while true
+do
+    pnum=`ps -ef | grep flashrom | grep -v grep | wc -l`
+    if [ $pnum -eq 0 ];then
+        break;
+    else
+        sleep 0.5
+    fi
+done
+while true
+do
+    pnum=`ps -ef | grep rpi-eeprom-update | grep -v grep | wc -l`
+    if [ $pnum -eq 0 ];then
+        break;
+    else
+        sleep 0.5
+    fi
+done
 shutdown --no-wall -r now
 EOF1
     chmod +x "${MNTPATH}/etc/resize-root-fs"
