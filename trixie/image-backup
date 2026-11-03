@@ -32,7 +32,7 @@ rmloop()
 {
     if [ "${LOOP}" != "" ]; then
         losetup -d "${LOOP}"
-        LOOP="" 
+        LOOP=""
     fi
 }
 
@@ -163,6 +163,8 @@ case "\$1" in
     do_expand_rootfs
     resize2fs "\$ROOT_PART" &&
     update-rc.d resize2fs_once remove &&
+    rm -f /etc/ssh/ssh_host_*
+    ssh-keygen -A
     rm /etc/init.d/resize2fs_once &&
     exit 0
     ;;
@@ -176,7 +178,7 @@ EOF
     pushd ${MNTPATH}/etc/rc3.d/
     ln -sf ../init.d/resize2fs_once S01resize2fs_once
     popd
-    
+
     sync
     umntimg
     mkloop

@@ -32,7 +32,7 @@ rmloop()
 {
   if [ "${LOOP}" != "" ]; then
     losetup -d "${LOOP}"
-    LOOP="" 
+    LOOP=""
   fi
 }
 
@@ -110,13 +110,14 @@ backup()
   chmod a+rwxt "${MNTPATH}/tmp/"
   if [ "${EXTRACT}" = "TRUE" ]; then
     sed -i "/^[[:space:]]*#/!s|^\(.*root=\)\S\+\(\s\+.*\)$|\1PARTUUID=${PTUUID}-02\2|" "${BOOTMNT}/cmdline.txt"
+    sed -i 's|$| init=/usr/lib/raspberrypi-sys-mods/firstboot|' "${BOOTMNT}/cmdline.txt"
     sed -i "/^[[:space:]]*#/!s|^\S\+\(\s\+/boot\S*\s\+vfat\s\+.*\)$|PARTUUID=${PTUUID}-01\1|" "${MNTPATH}/etc/fstab"
     sed -i "/^[[:space:]]*#/!s|^\S\+\(\s\+/\s\+.*\)$|PARTUUID=${PTUUID}-02\1|" "${MNTPATH}/etc/fstab"
   fi
 
   if [ ! -f "${MNTPATH}/etc/rc.local" ];then
     NEED_RCLOCAL=1
-    cat > "${MNTPATH}/etc/rc.local" << EOF0 
+    cat > "${MNTPATH}/etc/rc.local" << EOF0
 #!/bin/sh
 
 exit 0
@@ -159,6 +160,8 @@ case "$1" in
   start)
     resize2fs "$(mount | sed -n 's|^\(/dev/.*\) on / .*|\1|p')"
     update-rc.d resize_root_fs remove
+    rm -f /etc/ssh/ssh_host_*
+    ssh-keygen -A
     rm /etc/init.d/resize_root_fs
     ;;
   *)
@@ -179,6 +182,7 @@ do
         sleep 0.5
     fi
 done
+rpi-eeprom-update -a
 while true
 do
     pnum=`ps -ef | grep rpi-eeprom-update | grep -v grep | wc -l`
